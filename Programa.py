@@ -49,7 +49,7 @@ def Leer():
     print(type(VarNombre.get()))
     print(VarNombre.get())
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE=" + "'" + VarNombre.get() +"'")
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE=" + "'" + VarNombre.get() + "'")
     Usuario=MiCursor.fetchall()
     set(Usuario[0][0])
     print(Usuario)
@@ -72,7 +72,7 @@ def Actualizar():
     MiCursor=MiConexion.cursor()
 # Confirmamos el usuario y contraseña antes de actualizar campos
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE=" + VarNombre.get())
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE=" + "'" + VarNombre.get() + "'")
     Usuario=MiCursor.fetchall()
 
     for i in Usuario:
