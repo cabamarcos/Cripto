@@ -79,16 +79,27 @@ def Actualizar():
     MiCursor=MiConexion.cursor()
 # Confirmamos el usuario y contraseña antes de actualizar campos
 
-    MiCursor.execute("UPDATE DATOSUSUARIO SET NOMBRE= '" + VarNombre.get() + 
-                                        "', CONTRASEÑA= '" + VarPass.get() +
-                                        "', MARCA= '" + VarMarca.get() +
-                                        "', MODELO= '" + VarModelo.get() +
-                                        "', AÑO= '" + VarAño.get() +
-                                        "', COMBUSTIBLE= '" + VarFuel.get() +
-                                        "', MATRICULA= '" + VarMatricula.get() + 
-                                        "', BASTIDOR= '" + VarBastidor.get() +
-                                        ", WHERE NOMBRE= '" + VarNombre.get + 
-                                        "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+    MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
+
+    MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
+                                                    + "','" + VarPass.get() 
+                                                    + "','" + VarMarca.get() 
+                                                    + "','" + VarModelo.get() 
+                                                    + "','" + VarAño.get() 
+                                                    + "','" + VarFuel.get() 
+                                                    + "','" + VarMatricula.get() 
+                                                    + "','" + VarBastidor.get() + "')")
+
+    #MiCursor.execute("UPDATE DATOSUSUARIO SET NOMBRE= '" + VarNombre.get() + 
+     #                                   "', CONTRASEÑA= '" + VarPass.get() +
+      #                                  "', MARCA= '" + VarMarca.get() +
+       #                                 "', MODELO= '" + VarModelo.get() +
+        #                                "', AÑO= '" + VarAño.get() +
+         #                               "', COMBUSTIBLE= '" + VarFuel.get() +
+          #                              "', MATRICULA= '" + VarMatricula.get() + 
+           #                             "', BASTIDOR= '" + VarBastidor.get() +
+            #                            ", WHERE NOMBRE= '" + VarNombre.get + 
+             #                           "' AND CONTRASEÑA= '" + VarPass.get() +"'")
                                         
     #Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
         
