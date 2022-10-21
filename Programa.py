@@ -37,23 +37,28 @@ def Crear():
     MiConexion=sqlite3.connect("Base de Datos")
     MiCursor=MiConexion.cursor()
 
-    Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
-    MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES(?,?,?,?,?,?,?,?)", Datos)
-    # ALTERNATIVA MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() + "','" + VarPass.get() + "','" + VarMarca.get() + "','" + VarModelo.get() + "','" + VarAño.get() + "','" + VarFuel.get() + "','" + VarMatricula.get() + "','" + VarBastidor.get() + "')")
+    #Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
+    #MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES(?,?,?,?,?,?,?,?)", Datos)
+    MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
+                                                    + "','" + VarPass.get() 
+                                                    + "','" + VarMarca.get() 
+                                                    + "','" + VarModelo.get() 
+                                                    + "','" + VarAño.get() 
+                                                    + "','" + VarFuel.get() 
+                                                    + "','" + VarMatricula.get() 
+                                                    + "','" + VarBastidor.get() + "')")
     MiConexion.commit()
     messagebox.showinfo("BBDD", "Registro insertado con éxito")
 
 def Leer():
     MiConexion=sqlite3.connect("Base de Datos")
     MiCursor=MiConexion.cursor()
-    print(type(VarNombre.get()))
-    print(VarNombre.get())
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE=" + "'" + VarNombre.get() + "'")
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
+                                            + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+
     Usuario=MiCursor.fetchall()
-    set(Usuario[0][0])
-    print(Usuario)
-
+    
     for i in Usuario:
 
         VarNombre.set(i[0])
@@ -66,24 +71,39 @@ def Leer():
         VarBastidor.set(i[7])
     
     MiConexion.commit()
+    
 
 def Actualizar():
     MiConexion=sqlite3.connect("Base de Datos")
+
     MiCursor=MiConexion.cursor()
 # Confirmamos el usuario y contraseña antes de actualizar campos
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE=" + "'" + VarNombre.get() + "'")
-    Usuario=MiCursor.fetchall()
-
-    for i in Usuario:
+    MiCursor.execute("UPDATE DATOSUSUARIO SET NOMBRE= '" + VarNombre.get() + 
+                                        "', CONTRASEÑA= '" + VarPass.get() +
+                                        "', MARCA= '" + VarMarca.get() +
+                                        "', MODELO= '" + VarModelo.get() +
+                                        "', AÑO= '" + VarAño.get() +
+                                        "', COMBUSTIBLE= '" + VarFuel.get() +
+                                        "', MATRICULA= '" + VarMatricula.get() + 
+                                        "', BASTIDOR= '" + VarBastidor.get() +
+                                        ", WHERE NOMBRE= '" + VarNombre.get + 
+                                        "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+                                        
+    #Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
         
-        VerUsuario = (i[0])
-        VerPass = (i[1])
-    
     MiConexion.commit()
 
-    print(VerUsuario)
-    print(VerPass)
+    messagebox.showinfo("BBDD", "Registro actualizado conéxito")
+
+def Eliminar():
+    MiConexion=sqlite3.connect("Base de Datos")
+    MiCursor=MiConexion.cursor()
+
+    MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
+
+    MiConexion.commit()
+    messagebox.showinfo("BBDD", "Registro borrado con éxito")
 
 
 
@@ -167,7 +187,7 @@ BotonLeer.grid(row=0, column=1, padx=10, pady=10)
 BotonActualizar=Button(Ventana2, text="Actualizar", command=Actualizar)
 BotonActualizar.grid(row=0, column=2, padx=10, pady=10)
 
-BotonEliminar=Button(Ventana2, text="Eliminar")
+BotonEliminar=Button(Ventana2, text="Eliminar", command= Eliminar)
 BotonEliminar.grid(row=0, column=3, padx=10, pady=10)
 
 
