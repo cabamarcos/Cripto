@@ -23,17 +23,9 @@ root=Tk()
 
 #-----------------Funciones------------------#
 
-def Limpiar():
-    VarNombre.set("")
-    VarPass.set("")
-    VarMarca.set("")
-    VarModelo.set("")
-    VarAño.set("")
-    VarFuel.set("") 
-    VarMatricula.set("")
-    VarBastidor.set("")
-
 def Crear():
+    """Creamos registros"""
+
     MiConexion=sqlite3.connect("Base de Datos")
     MiCursor=MiConexion.cursor()
 
@@ -51,6 +43,8 @@ def Crear():
     messagebox.showinfo("BBDD", "Registro insertado con éxito")
 
 def Leer():
+    """Lee los registros con un usuario y una contraseña"""
+
     MiConexion=sqlite3.connect("Base de Datos")
     MiCursor=MiConexion.cursor()
 
@@ -74,7 +68,8 @@ def Leer():
     
 
 def Actualizar():
-    
+    """Actualizamos el registro con ese usuario y contraseña"""
+
     MiConexion=sqlite3.connect("Base de Datos")
     MiCursor=MiConexion.cursor()
 
@@ -104,6 +99,7 @@ def Actualizar():
     messagebox.showinfo("BBDD", "Registro actualizado conéxito")
 
 def Eliminar():
+    """Eliminamos el registro con ese usuario y esa contraseña"""
     
     MiConexion=sqlite3.connect("Base de Datos")
     MiCursor=MiConexion.cursor()
@@ -122,6 +118,7 @@ def Eliminar():
     VarBastidor.set("")
 
 def Limpiar():
+    """Limpia los datos de la interfaz"""
     VarNombre.set("")
     VarPass.set("")
     VarMarca.set("")
@@ -132,6 +129,7 @@ def Limpiar():
     VarBastidor.set("")
 
 def Salir():
+    """Salimos de la interfaz"""
 
     Confirmacion=messagebox.askquestion("Salir", "Confirme para salir de la aplicación")
 
