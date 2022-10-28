@@ -8,243 +8,278 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 #-------------------Crear Base de Datos"----------------------#
 
-MiConexion=sqlite3.connect("Base de Datos")
+# MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+# #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+# MiCursor=MiConexion.cursor()
 
-MiCursor=MiConexion.cursor()
+# MiCursor.execute("CREATE TABLE DATOSUSUARIO (NOMBRE VARCHAR(255) PRIMARY KEY, CONTRASEÑA VARCHAR(255), SALT VARCHAR(255), SALT2 VARCHAR(255), MARCA VARCHAR(255), MODELO VARCHAR(255), AÑO VARCHAR(255), COMBUSTIBLE VARCHAR(255), MATRICULA VARCHAR(255), BASTIDOR VARCHAR(255))")
 
-MiCursor.execute("CREATE TABLE DATOSUSUARIO (NOMBRE VARCHAR() PRIMARY KEY, CONTRASEÑA VARCHAR(), SALT VARCHAR(), SALT2 VARCHAR(), MARCA VARCHAR(), MODELO VARCHAR(), AÑO VARCHAR(), COMBUSTIBLE VARCHAR(), MATRICULA VARCHAR(), BASTIDOR VARCHAR())")
+# MiConexion.close()
 
-MiConexion.close()
+root=Tk()
 
+# Creadores=Menu(root)
+# root.config(menu=Creadores, width=300, height=300)
+# Creadores.add_cascade(label="Creadores Damián y Marcos")
 
-# root=Tk()
+#-----------------Funciones------------------#
 
-# # Creadores=Menu(root)
-# # root.config(menu=Creadores, width=300, height=300)
-# # Creadores.add_cascade(label="Creadores Damián y Marcos")
+def Crear():
+    """Creamos registros"""
 
-# #-----------------Funciones------------------#
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
-# def Crear():
-#     """Creamos registros"""
+    MiCursor=MiConexion.cursor()
 
-#     MiConexion=sqlite3.connect("Base de Datos")
-#     MiCursor=MiConexion.cursor()
+    salt = os.urandom(16)
+    strsalt = salt.hex()
 
-#     salt = os.urandom(16)
-#     print(salt)
-#     #strsalt = salt.decode('utf-8')
+    kdf = Scrypt(
 
-#     kdf = Scrypt(
+        salt=salt,
+        length=32,
+        n=2**14,
+        r=8,
+        p=1,
+    )
 
-#         salt=salt,
-#         length=32,
-#         n=2**14,
-#         r=8,
-#         p=1,
-#     )
+    key = kdf.derive(b'VarPass.get()')   #FALLOOOOOOO     <---------------------------------------------------------------------------------------------------------------
+    strkey=key.hex()
 
-#     key = kdf.derive(b'VarPass.get()')
-#     #strkey=key.decode('utf-8')
+    salt2='0'
 
-#     print(key)
+    #Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
+    #MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES(?,?,?,?,?,?,?,?)", Datos)
+    MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
+                                                    + "','" + strkey
+                                                    + "','" + strsalt
+                                                    + "','" + salt2
+                                                    + "','" + VarMarca.get() 
+                                                    + "','" + VarModelo.get() 
+                                                    + "','" + VarAño.get() 
+                                                    + "','" + VarFuel.get() 
+                                                    + "','" + VarMatricula.get() 
+                                                    + "','" + VarBastidor.get() + "')")
+    MiConexion.commit()
+    messagebox.showinfo("BBDD", "Registro insertado con éxito")
 
-#     #Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
-#     #MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES(?,?,?,?,?,?,?,?)", Datos)
-#     MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
-#                                                     + "','" + key
-#                                                     + "','" + salt
-#                                                     + "','" + VarMarca.get() 
-#                                                     + "','" + VarModelo.get() 
-#                                                     + "','" + VarAño.get() 
-#                                                     + "','" + VarFuel.get() 
-#                                                     + "','" + VarMatricula.get() 
-#                                                     + "','" + VarBastidor.get() + "')")
-#     MiConexion.commit()
-#     messagebox.showinfo("BBDD", "Registro insertado con éxito")
+def Leer():
+    """Lee los registros con un usuario y una contraseña"""
 
-# def Leer():
-#     """Lee los registros con un usuario y una contraseña"""
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
-#     MiConexion=sqlite3.connect("Base de Datos")
-#     MiCursor=MiConexion.cursor()
+    MiCursor=MiConexion.cursor()
 
-#     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
-#                                             + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
-#     Usuario=MiCursor.fetchall()
+    Usuario=MiCursor.fetchall()
     
-#     for i in Usuario:
+    for i in Usuario:
 
-#         VarNombre.set(i[0])
-#         VarPass.set(i[1])
-#         VarMarca.set(i[3])
-#         VarModelo.set(i[4])
-#         VarAño.set(i[5])
-#         VarFuel.set(i[6]) 
-#         VarMatricula.set(i[7])
-#         VarBastidor.set(i[8])
+        hexsalt=(i[2])
     
-#     MiConexion.commit()
+    #key=bytes.fromhex(hexkey)    
+    salt=bytes.fromhex(hexsalt)
+
+    kdf = Scrypt(
+    salt=salt,
+    length=32,
+    n=2**14,
+    r=8,
+    p=1,
+    )
+    #kdf.verify(b'VarPass.get()', key)
+    key = kdf.derive(b'VarPass.get()')
+    strkey=key.hex()
+
+    MiConexion.commit()
+    MiConexion.close()
+
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+
+    MiCursor=MiConexion.cursor()
+
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
+                                            + "' AND CONTRASEÑA= '" + strkey +"'")
+
+    Usuario=MiCursor.fetchall()
     
+    for i in Usuario:
 
-# def Actualizar():
-#     """Actualizamos el registro con ese usuario y contraseña"""
+        VarMarca.set(i[4])
+        VarModelo.set(i[5])
+        VarAño.set(i[6])
+        VarFuel.set(i[7]) 
+        VarMatricula.set(i[8])
+        VarBastidor.set(i[9])
+    
+    MiConexion.commit()
 
-#     MiConexion=sqlite3.connect("Base de Datos")
-#     MiCursor=MiConexion.cursor()
+    
+def Actualizar():
+    """Actualizamos el registro con ese usuario y contraseña"""
 
-#     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
-#                                             + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
-#     Usuario=MiCursor.fetchall()
+    MiCursor=MiConexion.cursor()
 
-#     for i in Usuario:
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
+                                            + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+
+    Usuario=MiCursor.fetchall()
+
+    for i in Usuario:
         
-#         VerUsuario = (i[0])
-#         VerPass = (i[1])
+        VerUsuario = (i[0])
+        VerPass = (i[1])
 
-#     MiConexion.commit()
+    MiConexion.commit()
 
-#     if VerUsuario == VarNombre.get() and VerPass == VarPass.get():
+    if VerUsuario == VarNombre.get() and VerPass == VarPass.get():
 
-#         MiCursor.execute("UPDATE DATOSUSUARIO SET MARCA= '" + VarMarca.get() +
-#                                         "', MODELO= '" + VarModelo.get() +
-#                                         "', AÑO= '" + VarAño.get() +
-#                                         "', COMBUSTIBLE= '" + VarFuel.get() +
-#                                         "', MATRICULA= '" + VarMatricula.get() + 
-#                                         "', BASTIDOR= '" + VarBastidor.get() +
-#                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
-#         MiConexion.commit()
+        MiCursor.execute("UPDATE DATOSUSUARIO SET MARCA= '" + VarMarca.get() +
+                                        "', MODELO= '" + VarModelo.get() +
+                                        "', AÑO= '" + VarAño.get() +
+                                        "', COMBUSTIBLE= '" + VarFuel.get() +
+                                        "', MATRICULA= '" + VarMatricula.get() + 
+                                        "', BASTIDOR= '" + VarBastidor.get() +
+                                        "' WHERE NOMBRE= '" + VarNombre.get() + "'")
+        MiConexion.commit()
 
-#     messagebox.showinfo("BBDD", "Registro actualizado conéxito")
+    messagebox.showinfo("BBDD", "Registro actualizado conéxito")
 
-# def Eliminar():
-#     """Eliminamos el registro con ese usuario y esa contraseña"""
+def Eliminar():
+    """Eliminamos el registro con ese usuario y esa contraseña"""
     
-#     MiConexion=sqlite3.connect("Base de Datos")
-#     MiCursor=MiConexion.cursor()
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
-#     MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get()
-#                                                 + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+    MiCursor=MiConexion.cursor()
 
-#     MiConexion.commit()
-#     messagebox.showinfo("BBDD", "Registro borrado con éxito")
+    MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get()
+                                                + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
 
-#     VarMarca.set("")
-#     VarModelo.set("")
-#     VarAño.set("")
-#     VarFuel.set("") 
-#     VarMatricula.set("")
-#     VarBastidor.set("")
+    MiConexion.commit()
+    messagebox.showinfo("BBDD", "Registro borrado con éxito")
 
-# def Limpiar():
-#     """Limpia los datos de la interfaz"""
-#     VarNombre.set("")
-#     VarPass.set("")
-#     VarMarca.set("")
-#     VarModelo.set("")
-#     VarAño.set("")
-#     VarFuel.set("") 
-#     VarMatricula.set("")
-#     VarBastidor.set("")
+    VarMarca.set("")
+    VarModelo.set("")
+    VarAño.set("")
+    VarFuel.set("") 
+    VarMatricula.set("")
+    VarBastidor.set("")
 
-# def Salir():
-#     """Salimos de la interfaz"""
+def Limpiar():
+    """Limpia los datos de la interfaz"""
+    VarNombre.set("")
+    VarPass.set("")
+    VarMarca.set("")
+    VarModelo.set("")
+    VarAño.set("")
+    VarFuel.set("") 
+    VarMatricula.set("")
+    VarBastidor.set("")
 
-#     Confirmacion=messagebox.askquestion("Salir", "Confirme para salir de la aplicación")
+def Salir():
+    """Salimos de la interfaz"""
 
-#     if Confirmacion=="yes":
-#         root.destroy()
+    Confirmacion=messagebox.askquestion("Salir", "Confirme para salir de la aplicación")
 
-# #--------------------VENTANA-------------------#
+    if Confirmacion=="yes":
+        root.destroy()
 
-# Ventana=Frame(root)
-# Ventana.pack()
+#--------------------VENTANA-------------------#
 
-# VarNombre=StringVar()
-# VarPass=StringVar()
-# VarMarca=StringVar()
-# VarModelo=StringVar()
-# VarAño=StringVar()
-# VarFuel=StringVar()
-# VarMatricula=StringVar()
-# VarBastidor=StringVar()
+Ventana=Frame(root)
+Ventana.pack()
 
-# CuadroNombre=Entry(Ventana, textvariable=VarNombre)
-# CuadroNombre.grid(row=0, column=1, padx=10, pady=10)
+VarNombre=StringVar()
+VarPass=StringVar()
+VarMarca=StringVar()
+VarModelo=StringVar()
+VarAño=StringVar()
+VarFuel=StringVar()
+VarMatricula=StringVar()
+VarBastidor=StringVar()
 
-# CuadroPass=Entry(Ventana, textvariable=VarPass)
-# CuadroPass.grid(row=1, column=1, padx=10, pady=10)
-# CuadroPass.config(show="*")
+CuadroNombre=Entry(Ventana, textvariable=VarNombre)
+CuadroNombre.grid(row=0, column=1, padx=10, pady=10)
 
-# CuadroMarca=Entry(Ventana, textvariable=VarMarca)
-# CuadroMarca.grid(row=3, column=1, padx=10, pady=10)
+CuadroPass=Entry(Ventana, textvariable=VarPass)
+CuadroPass.grid(row=1, column=1, padx=10, pady=10)
+CuadroPass.config(show="*")
 
-# CuadroModelo=Entry(Ventana, textvariable=VarModelo)
-# CuadroModelo.grid(row=4, column=1, padx=10, pady=10)
+CuadroMarca=Entry(Ventana, textvariable=VarMarca)
+CuadroMarca.grid(row=3, column=1, padx=10, pady=10)
 
-# CuadroAño=Entry(Ventana, textvariable=VarAño)
-# CuadroAño.grid(row=5, column=1, padx=10, pady=10)
+CuadroModelo=Entry(Ventana, textvariable=VarModelo)
+CuadroModelo.grid(row=4, column=1, padx=10, pady=10)
 
-# CuadroFuel=Entry(Ventana, textvariable=VarFuel)
-# CuadroFuel.grid(row=6, column=1, padx=10, pady=10)
+CuadroAño=Entry(Ventana, textvariable=VarAño)
+CuadroAño.grid(row=5, column=1, padx=10, pady=10)
 
-# CuadroMatricula=Entry(Ventana, textvariable=VarMatricula)
-# CuadroMatricula.grid(row=7, column=1, padx=10, pady=10)
+CuadroFuel=Entry(Ventana, textvariable=VarFuel)
+CuadroFuel.grid(row=6, column=1, padx=10, pady=10)
 
-# CuadroBastidor=Entry(Ventana, textvariable=VarBastidor)
-# CuadroBastidor.grid(row=8, column=1, padx=10, pady=10)
+CuadroMatricula=Entry(Ventana, textvariable=VarMatricula)
+CuadroMatricula.grid(row=7, column=1, padx=10, pady=10)
 
-# #------------------Texto---------------------#
-# LabelNombre=Label(Ventana, text="Usuario:")
-# LabelNombre.grid(row=0, column=0, padx=10, pady=10, sticky="e")
+CuadroBastidor=Entry(Ventana, textvariable=VarBastidor)
+CuadroBastidor.grid(row=8, column=1, padx=10, pady=10)
 
-# LabelPass=Label(Ventana, text="Contraseña:")
-# LabelPass.grid(row=1, column=0, padx=10, pady=10, sticky="e")
+#------------------Texto---------------------#
+LabelNombre=Label(Ventana, text="Usuario:")
+LabelNombre.grid(row=0, column=0, padx=10, pady=10, sticky="e")
 
-# LabelSeparador=Label(Ventana, text="VEHICULO:")
-# LabelSeparador.grid(row=2, column=0, padx=15, pady=10, sticky="e")
+LabelPass=Label(Ventana, text="Contraseña:")
+LabelPass.grid(row=1, column=0, padx=10, pady=10, sticky="e")
 
-# LabelMarca=Label(Ventana, text="Marca:")
-# LabelMarca.grid(row=3, column=0, padx=10, pady=10, sticky="e")
+LabelSeparador=Label(Ventana, text="VEHICULO:")
+LabelSeparador.grid(row=2, column=0, padx=15, pady=10, sticky="e")
 
-# LabelModelo=Label(Ventana, text="Modelo:")
-# LabelModelo.grid(row=4, column=0, padx=10, pady=10, sticky="e")
+LabelMarca=Label(Ventana, text="Marca:")
+LabelMarca.grid(row=3, column=0, padx=10, pady=10, sticky="e")
 
-# LabelAño=Label(Ventana, text="Año de fabricación:")
-# LabelAño.grid(row=5, column=0, padx=10, pady=10, sticky="e")
+LabelModelo=Label(Ventana, text="Modelo:")
+LabelModelo.grid(row=4, column=0, padx=10, pady=10, sticky="e")
 
-# LabelFuel=Label(Ventana, text="Combustible:")
-# LabelFuel.grid(row=6, column=0, padx=10, pady=10, sticky="e")
+LabelAño=Label(Ventana, text="Año de fabricación:")
+LabelAño.grid(row=5, column=0, padx=10, pady=10, sticky="e")
 
-# LabelMatricula=Label(Ventana, text="Matricula:")
-# LabelMatricula.grid(row=7, column=0, padx=10, pady=10, sticky="e")
+LabelFuel=Label(Ventana, text="Combustible:")
+LabelFuel.grid(row=6, column=0, padx=10, pady=10, sticky="e")
 
-# LabelBastidor=Label(Ventana, text="Nº Bastidor:")
-# LabelBastidor.grid(row=8, column=0, padx=10, pady=10, sticky="e")
+LabelMatricula=Label(Ventana, text="Matricula:")
+LabelMatricula.grid(row=7, column=0, padx=10, pady=10, sticky="e")
 
-# #---------------------Botones-----------------------#
+LabelBastidor=Label(Ventana, text="Nº Bastidor:")
+LabelBastidor.grid(row=8, column=0, padx=10, pady=10, sticky="e")
 
-# Ventana2=Frame(root)
-# Ventana2.pack()
+#---------------------Botones-----------------------#
 
-# BotonCrear=Button(Ventana2, text="Crear", command=Crear)
-# BotonCrear.grid(row=0, column=0, padx=10, pady=10)
+Ventana2=Frame(root)
+Ventana2.pack()
 
-# BotonLeer=Button(Ventana2, text="Leer", command=Leer)
-# BotonLeer.grid(row=0, column=1, padx=10, pady=10)
+BotonCrear=Button(Ventana2, text="Crear", command=Crear)
+BotonCrear.grid(row=0, column=0, padx=10, pady=10)
 
-# BotonActualizar=Button(Ventana2, text="Actualizar", command=Actualizar)
-# BotonActualizar.grid(row=0, column=2, padx=10, pady=10)
+BotonLeer=Button(Ventana2, text="Leer", command=Leer)
+BotonLeer.grid(row=0, column=1, padx=10, pady=10)
 
-# BotonEliminar=Button(Ventana2, text="Eliminar", command=Eliminar)
-# BotonEliminar.grid(row=0, column=3, padx=10, pady=10)
+BotonActualizar=Button(Ventana2, text="Actualizar", command=Actualizar)
+BotonActualizar.grid(row=0, column=2, padx=10, pady=10)
 
-# BotonLimpiar=Button(Ventana2, text="Limpiar", command=Limpiar)
-# BotonLimpiar.grid(row=1, column=1, padx=10, pady=10)
+BotonEliminar=Button(Ventana2, text="Eliminar", command=Eliminar)
+BotonEliminar.grid(row=0, column=3, padx=10, pady=10)
 
-# BotonSalir=Button(Ventana2, text="Salir", command=Salir)
-# BotonSalir.grid(row=1, column=2, padx=10, pady=10)
+BotonLimpiar=Button(Ventana2, text="Limpiar", command=Limpiar)
+BotonLimpiar.grid(row=1, column=1, padx=10, pady=10)
 
-# root.mainloop()
+BotonSalir=Button(Ventana2, text="Salir", command=Salir)
+BotonSalir.grid(row=1, column=2, padx=10, pady=10)
+
+root.mainloop()
