@@ -2,7 +2,10 @@ from tkinter import *
 from tkinter import messagebox
 import sqlite3
 import os
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt #https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#cryptography.hazmat.primitives.kdf.scrypt.Scrypt
+from cryptography.hazmat.primitives import hashes            
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC #https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#cryptography.hazmat.primitives.kdf.pbkdf2.PBKDF2HMAC
+from cryptography.fernet import Fernet #https://cryptography.io/en/latest/fernet/#
 
 
 
@@ -32,6 +35,7 @@ def Crear():
 
     MiCursor=MiConexion.cursor()
 
+    #SALT 1 PARA TOKEN DE CONTRASEÑA
     salt = os.urandom(16)
     strsalt = salt.hex()
 
@@ -45,23 +49,58 @@ def Crear():
     )
 
     bytekey=VarPass.get().encode()
-    key = kdf.derive(bytekey)   #FALLOOOOOOO     <---------------------------------------------------------------------------------------------------------------
+    key = kdf.derive(bytekey)
     strkey=key.hex()
+    #-------------------------------
 
-    salt2='0'
+    #SALT 2 PARA CIFRADO SIMETRICO
 
-    #Datos=(VarNombre.get(), VarPass.get(), VarMarca.get(), VarModelo.get(), VarAño.get(), VarFuel.get(), VarMatricula.get(), VarBastidor.get())
-    #MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES(?,?,?,?,?,?,?,?)", Datos)
+    salt2 = os.urandom(16)
+    strsalt2 = salt2.hex()
+
+    # derive
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=390000,
+    )
+    bytekey2=VarPass.get().encode()
+    
+    key2 = kdf.derive(bytekey2)
+    strkey2=key2.hex()
+    #---------------------------------------------
+    keyPRUEBA = Fernet.generate_key()
+    print(key2)
+    print(type(key2))
+    print(keyPRUEBA)
+    print(type(keyPRUEBA))
+
+    f = Fernet(strkey2)
+    marca = VarMarca.get().encode()
+    modelo = VarModelo.get().encode()
+    año = VarAño.get().encode()
+    fuel = VarFuel.get().encode()
+    matricula = VarMatricula.get().encode()
+    bastidor = VarBastidor.get().encode()
+
+    tokenMarca = f.encrypt(marca)
+    tokenModelo = f.encrypt(modelo)
+    tokenAño = f.encrypt(año)
+    tokenFuel = f.encrypt(fuel)
+    tokenMatricula = f.encrypt(matricula)
+    tokenBastidor = f.encrypt(bastidor)
+    
     MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
                                                     + "','" + strkey
                                                     + "','" + strsalt
-                                                    + "','" + salt2
-                                                    + "','" + VarMarca.get() 
-                                                    + "','" + VarModelo.get() 
-                                                    + "','" + VarAño.get() 
-                                                    + "','" + VarFuel.get() 
-                                                    + "','" + VarMatricula.get() 
-                                                    + "','" + VarBastidor.get() + "')")
+                                                    + "','" + strsalt2
+                                                    + "','" + tokenMarca
+                                                    + "','" + tokenModelo
+                                                    + "','" + tokenAño
+                                                    + "','" + tokenFuel 
+                                                    + "','" + tokenMatricula 
+                                                    + "','" + tokenBastidor + "')")
     MiConexion.commit()
     messagebox.showinfo("BBDD", "Registro insertado con éxito")
 
