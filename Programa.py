@@ -44,7 +44,8 @@ def Crear():
         p=1,
     )
 
-    key = kdf.derive(b'VarPass.get()')   #FALLOOOOOOO     <---------------------------------------------------------------------------------------------------------------
+    bytekey=VarPass.get().encode()
+    key = kdf.derive(bytekey)   #FALLOOOOOOO     <---------------------------------------------------------------------------------------------------------------
     strkey=key.hex()
 
     salt2='0'
@@ -91,16 +92,9 @@ def Leer():
     p=1,
     )
     #kdf.verify(b'VarPass.get()', key)
-    key = kdf.derive(b'VarPass.get()')
+    bytekey=VarPass.get().encode()
+    key = kdf.derive(bytekey)
     strkey=key.hex()
-
-    MiConexion.commit()
-    MiConexion.close()
-
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
-    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
-
-    MiCursor=MiConexion.cursor()
 
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
                                             + "' AND CONTRASEÑA= '" + strkey +"'")
@@ -127,8 +121,34 @@ def Actualizar():
 
     MiCursor=MiConexion.cursor()
 
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
+
+    Usuario=MiCursor.fetchall()
+    
+    for i in Usuario:
+
+        hexsalt=(i[2])
+
+    MiConexion.commit()
+    
+    #key=bytes.fromhex(hexkey)    
+    salt=bytes.fromhex(hexsalt)
+
+    kdf = Scrypt(
+    salt=salt,
+    length=32,
+    n=2**14,
+    r=8,
+    p=1,
+    )
+    #kdf.verify(b'VarPass.get()', key)
+    bytekey=VarPass.get().encode()
+    key = kdf.derive(bytekey)
+    strkey=key.hex()
+
+
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
-                                            + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+                                            + "' AND CONTRASEÑA= '" + strkey +"'")
 
     Usuario=MiCursor.fetchall()
 
@@ -139,7 +159,7 @@ def Actualizar():
 
     MiConexion.commit()
 
-    if VerUsuario == VarNombre.get() and VerPass == VarPass.get():
+    if VerUsuario == VarNombre.get() and VerPass == strkey:
 
         MiCursor.execute("UPDATE DATOSUSUARIO SET MARCA= '" + VarMarca.get() +
                                         "', MODELO= '" + VarModelo.get() +
@@ -150,7 +170,7 @@ def Actualizar():
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
         MiConexion.commit()
 
-    messagebox.showinfo("BBDD", "Registro actualizado conéxito")
+        messagebox.showinfo("BBDD", "Registro actualizado conéxito")
 
 def Eliminar():
     """Eliminamos el registro con ese usuario y esa contraseña"""
@@ -160,19 +180,59 @@ def Eliminar():
 
     MiCursor=MiConexion.cursor()
 
-    MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get()
-                                                + "' AND CONTRASEÑA= '" + VarPass.get() +"'")
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
+
+    Usuario=MiCursor.fetchall()
+    
+    for i in Usuario:
+
+        hexsalt=(i[2])
 
     MiConexion.commit()
-    messagebox.showinfo("BBDD", "Registro borrado con éxito")
+    
+    #key=bytes.fromhex(hexkey)    
+    salt=bytes.fromhex(hexsalt)
 
-    VarMarca.set("")
-    VarModelo.set("")
-    VarAño.set("")
-    VarFuel.set("") 
-    VarMatricula.set("")
-    VarBastidor.set("")
+    kdf = Scrypt(
+    salt=salt,
+    length=32,
+    n=2**14,
+    r=8,
+    p=1,
+    )
+    #kdf.verify(b'VarPass.get()', key)
+    bytekey=VarPass.get().encode()
+    key = kdf.derive(bytekey)
+    strkey=key.hex()
 
+    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
+                                            + "' AND CONTRASEÑA= '" + strkey +"'")
+
+    Usuario=MiCursor.fetchall()
+
+    for i in Usuario:
+        
+        VerUsuario = (i[0])
+        VerPass = (i[1])
+
+    MiConexion.commit()
+
+    if VerUsuario == VarNombre.get() and VerPass == strkey:
+
+        MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get()
+                                                + "' AND CONTRASEÑA= '" + strkey +"'")
+        MiConexion.commit()
+        messagebox.showinfo("BBDD", "Registro borrado con éxito")
+
+
+        VarMarca.set("")
+        VarModelo.set("")
+        VarAño.set("")
+        VarFuel.set("") 
+        VarMatricula.set("")
+        VarBastidor.set("")
+    
+    
 def Limpiar():
     """Limpia los datos de la interfaz"""
     VarNombre.set("")
