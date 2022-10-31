@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt #https://cryptograp
 from cryptography.hazmat.primitives import hashes            
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC #https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#cryptography.hazmat.primitives.kdf.pbkdf2.PBKDF2HMAC
 from cryptography.fernet import Fernet #https://cryptography.io/en/latest/fernet/#
-
+import base64
 
 
 #-------------------Crear Base de Datos"----------------------#
@@ -67,31 +67,25 @@ def Crear():
     )
     bytekey2=VarPass.get().encode()
     
-    key2 = kdf.derive(bytekey2)
-    strkey2=key2.hex()
+    keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
     #---------------------------------------------
-    keyPRUEBA = Fernet.generate_key()
-    print(key2)
-    print(type(key2))
-    print(keyPRUEBA)
-    print(type(keyPRUEBA))
 
-    #key = base64.urlsafe_b64encode(kdf.derive(password))
+    f = Fernet(keyFernet)
 
-    f = Fernet(strkey2)
-    #marca = VarMarca.get().encode()
-    #modelo = VarModelo.get().encode()
-    #año = VarAño.get().encode()
-    #fuel = VarFuel.get().encode()
-    #matricula = VarMatricula.get().encode()
-    #bastidor = VarBastidor.get().encode()
+    marca = VarMarca.get().encode()
+    modelo = VarModelo.get().encode()
+    año = VarAño.get().encode() 
+    fuel = VarFuel.get().encode()
+    matricula = VarMatricula.get().encode()
+    bastidor = VarBastidor.get().encode()
 
-    tokenMarca = f.encrypt(VarMarca.get().encode())
-    tokenModelo = f.encrypt(VarModelo.get().encode())
-    tokenAño = f.encrypt(VarAño.get().encode())
-    tokenFuel = f.encrypt(VarFuel.get().encode())
-    tokenMatricula = f.encrypt(VarMatricula.get().encode())
-    tokenBastidor = f.encrypt(VarBastidor.get().encode())
+    tokenMarca = f.encrypt(marca).hex()
+    tokenModelo = f.encrypt(modelo).hex()
+    tokenAño = f.encrypt(año).hex()
+    tokenFuel = f.encrypt(fuel).hex()
+    tokenMatricula = f.encrypt(matricula).hex()
+    tokenBastidor = f.encrypt(bastidor).hex()
+
     
     MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
                                                     + "','" + strkey
@@ -120,39 +114,76 @@ def Leer():
     
     for i in Usuario:
 
-        hexsalt=(i[2])
+        hexsalt1 =(i[2])
+        hexsalt2 =(i[3])
     
-    #key=bytes.fromhex(hexkey)    
-    salt=bytes.fromhex(hexsalt)
+    # ----SCRIPT---------------------------------
+    salt1=bytes.fromhex(hexsalt1)
 
     kdf = Scrypt(
-    salt=salt,
+    salt=salt1,
     length=32,
     n=2**14,
     r=8,
     p=1,
     )
-    #kdf.verify(b'VarPass.get()', key)
     bytekey=VarPass.get().encode()
     key = kdf.derive(bytekey)
     strkey=key.hex()
+    
+    #---------PBKDF2HMC---------------------------------
+    salt2=bytes.fromhex(hexsalt2)
+    
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt2,
+        iterations=390000,
+    )
+    bytekey2=VarPass.get().encode()
+    
+    keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
 
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
                                             + "' AND CONTRASEÑA= '" + strkey +"'")
 
-    Usuario=MiCursor.fetchall()
-    
+    Usuario=MiCursor.fetchall()   
     for i in Usuario:
-
-        VarMarca.set(i[4])
-        VarModelo.set(i[5])
-        VarAño.set(i[6])
-        VarFuel.set(i[7]) 
-        VarMatricula.set(i[8])
-        VarBastidor.set(i[9])
-    
+        
+        marca = (i[4])
+        modelo = (i[5])
+        año = (i[6])
+        fuel = (i[7]) 
+        matricula = (i[8])
+        bastidor = (i[9])   
     MiConexion.commit()
 
+    #--------------FERNET------------------------------- 
+    bmarca = bytes.fromhex(marca)
+    bmodelo = bytes.fromhex(modelo)
+    baño = bytes.fromhex(año)
+    bfuel = bytes.fromhex(fuel)
+    bmatricula = bytes.fromhex(matricula)
+    bbastidor = bytes.fromhex(bastidor)
+
+    f = Fernet(keyFernet)
+
+    aMarca = f.decrypt(bmarca).decode()
+    aModelo = f.decrypt(bmodelo).decode()
+    aAño = f.decrypt(baño).decode()
+    aFuel = f.decrypt(bfuel).decode()
+    aMatricula = f.decrypt(bmatricula).decode()
+    aBastidor = f.decrypt(bbastidor).decode()
+
+
+    #------------------------------------------------
+
+    VarMarca.set(aMarca)
+    VarModelo.set(aModelo)
+    VarAño.set(aAño)
+    VarFuel.set(aFuel) 
+    VarMatricula.set(aMatricula)
+    VarBastidor.set(aBastidor)
     
 def Actualizar():
     """Actualizamos el registro con ese usuario y contraseña"""
