@@ -11,7 +11,7 @@ import base64
 
 #-------------------Crear Base de Datos"----------------------#
 
-# MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+# MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
 # #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 # MiCursor=MiConexion.cursor()
 
@@ -30,7 +30,7 @@ root=Tk()
 def Crear():
     """Creamos registros"""
 
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
     #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
@@ -62,10 +62,11 @@ def Crear():
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
-        salt=salt,
+        salt=salt2,
         iterations=390000,
     )
     bytekey2=VarPass.get().encode()
+    #bytekey2=bytes(VarPass.get(), "ascii")
     
     keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
     #---------------------------------------------
@@ -78,6 +79,13 @@ def Crear():
     fuel = VarFuel.get().encode()
     matricula = VarMatricula.get().encode()
     bastidor = VarBastidor.get().encode()
+
+    # marca = bytes(VarMarca.get(), "ascii")
+    # modelo = bytes(VarModelo.get(), "ascii")
+    # año = bytes(VarAño.get(), "ascii")
+    # fuel = bytes(VarFuel.get(), "ascii")
+    # matricula = bytes(VarMatricula.get(), "ascii")
+    # bastidor = bytes(VarBastidor.get(), "ascii")
 
     tokenMarca = f.encrypt(marca).hex()
     tokenModelo = f.encrypt(modelo).hex()
@@ -103,7 +111,7 @@ def Crear():
 def Leer():
     """Lee los registros con un usuario y una contraseña"""
 
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
     #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
@@ -188,7 +196,7 @@ def Leer():
 def Actualizar():
     """Actualizamos el registro con ese usuario y contraseña"""
 
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
     #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
@@ -199,25 +207,38 @@ def Actualizar():
     
     for i in Usuario:
 
-        hexsalt=(i[2])
+        hexsalt1=(i[2])
+        hexsalt2=(i[3])
+
 
     MiConexion.commit()
     
-    #key=bytes.fromhex(hexkey)    
-    salt=bytes.fromhex(hexsalt)
+    # ----SCRIPT---------------------------------
+    salt1=bytes.fromhex(hexsalt1)
 
     kdf = Scrypt(
-    salt=salt,
+    salt=salt1,
     length=32,
     n=2**14,
     r=8,
     p=1,
     )
-    #kdf.verify(b'VarPass.get()', key)
     bytekey=VarPass.get().encode()
     key = kdf.derive(bytekey)
     strkey=key.hex()
 
+    #---------PBKDF2HMC---------------------------------
+    salt2=bytes.fromhex(hexsalt2)
+    
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt2,
+        iterations=390000,
+    )
+    bytekey2=VarPass.get().encode()
+    
+    keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
 
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
                                             + "' AND CONTRASEÑA= '" + strkey +"'")
@@ -233,12 +254,29 @@ def Actualizar():
 
     if VerUsuario == VarNombre.get() and VerPass == strkey:
 
-        MiCursor.execute("UPDATE DATOSUSUARIO SET MARCA= '" + VarMarca.get() +
-                                        "', MODELO= '" + VarModelo.get() +
-                                        "', AÑO= '" + VarAño.get() +
-                                        "', COMBUSTIBLE= '" + VarFuel.get() +
-                                        "', MATRICULA= '" + VarMatricula.get() + 
-                                        "', BASTIDOR= '" + VarBastidor.get() +
+        f = Fernet(keyFernet)
+
+        marca = VarMarca.get().encode()
+        modelo = VarModelo.get().encode()
+        año = VarAño.get().encode() 
+        fuel = VarFuel.get().encode()
+        matricula = VarMatricula.get().encode()
+        bastidor = VarBastidor.get().encode()
+
+        tokenMarca = f.encrypt(marca).hex()
+        tokenModelo = f.encrypt(modelo).hex()
+        tokenAño = f.encrypt(año).hex()
+        tokenFuel = f.encrypt(fuel).hex()
+        tokenMatricula = f.encrypt(matricula).hex()
+        tokenBastidor = f.encrypt(bastidor).hex()
+
+
+        MiCursor.execute("UPDATE DATOSUSUARIO SET MARCA= '" + tokenMarca +
+                                        "', MODELO= '" + tokenModelo +
+                                        "', AÑO= '" + tokenAño +
+                                        "', COMBUSTIBLE= '" + tokenFuel +
+                                        "', MATRICULA= '" + tokenMatricula + 
+                                        "', BASTIDOR= '" + tokenBastidor +
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
         MiConexion.commit()
 
@@ -247,7 +285,7 @@ def Actualizar():
 def Eliminar():
     """Eliminamos el registro con ese usuario y esa contraseña"""
     
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
     #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
