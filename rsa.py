@@ -10,5 +10,3 @@ def generate_keys():
     public_key = new_key.publickey().exportKey("PEM")
     #Return both the private and the public key
     return private_key, public_key
-
-print(generate_keys())
