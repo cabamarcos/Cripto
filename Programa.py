@@ -80,13 +80,6 @@ def Crear():
     matricula = VarMatricula.get().encode()
     bastidor = VarBastidor.get().encode()
 
-    # marca = bytes(VarMarca.get(), "ascii")
-    # modelo = bytes(VarModelo.get(), "ascii")
-    # año = bytes(VarAño.get(), "ascii")
-    # fuel = bytes(VarFuel.get(), "ascii")
-    # matricula = bytes(VarMatricula.get(), "ascii")
-    # bastidor = bytes(VarBastidor.get(), "ascii")
-
     tokenMarca = f.encrypt(marca).hex()
     tokenModelo = f.encrypt(modelo).hex()
     tokenAño = f.encrypt(año).hex()
@@ -122,11 +115,13 @@ def Leer():
     
     for i in Usuario:
 
+        hexkey =(i[1])
         hexsalt1 =(i[2])
         hexsalt2 =(i[3])
     
     # ----SCRIPT---------------------------------
     salt1=bytes.fromhex(hexsalt1)
+    key=bytes.fromhex(hexkey)
 
     kdf = Scrypt(
     salt=salt1,
@@ -135,63 +130,139 @@ def Leer():
     r=8,
     p=1,
     )
-    bytekey=VarPass.get().encode()
-    key = kdf.derive(bytekey)
-    strkey=key.hex()
-    
-    #---------PBKDF2HMC---------------------------------
-    salt2=bytes.fromhex(hexsalt2)
-    
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt2,
-        iterations=390000,
-    )
-    bytekey2=VarPass.get().encode()
-    
-    keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
+    bytekey=VarPass.get().encode() #Extraemos la contraseña de la interfaz gráficay la codificamos en bytes
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
-                                            + "' AND CONTRASEÑA= '" + strkey +"'")
-
-    Usuario=MiCursor.fetchall()   
-    for i in Usuario:
+    try:
+        kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original
+    
+        #---------PBKDF2HMC---------------------------------
+        salt2=bytes.fromhex(hexsalt2)
         
-        marca = (i[4])
-        modelo = (i[5])
-        año = (i[6])
-        fuel = (i[7]) 
-        matricula = (i[8])
-        bastidor = (i[9])   
-    MiConexion.commit()
-
-    #--------------FERNET------------------------------- 
-    bmarca = bytes.fromhex(marca)
-    bmodelo = bytes.fromhex(modelo)
-    baño = bytes.fromhex(año)
-    bfuel = bytes.fromhex(fuel)
-    bmatricula = bytes.fromhex(matricula)
-    bbastidor = bytes.fromhex(bastidor)
-
-    f = Fernet(keyFernet)
-
-    aMarca = f.decrypt(bmarca).decode()
-    aModelo = f.decrypt(bmodelo).decode()
-    aAño = f.decrypt(baño).decode()
-    aFuel = f.decrypt(bfuel).decode()
-    aMatricula = f.decrypt(bmatricula).decode()
-    aBastidor = f.decrypt(bbastidor).decode()
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt2,
+            iterations=390000,
+        )
+        bytekey2=VarPass.get().encode()
+        
+        keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
 
 
-    #------------------------------------------------
+        MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")                                                
 
-    VarMarca.set(aMarca)
-    VarModelo.set(aModelo)
-    VarAño.set(aAño)
-    VarFuel.set(aFuel) 
-    VarMatricula.set(aMatricula)
-    VarBastidor.set(aBastidor)
+        Usuario=MiCursor.fetchall()   
+        for i in Usuario:
+            
+            marca = (i[4])
+            modelo = (i[5])
+            año = (i[6])
+            fuel = (i[7]) 
+            matricula = (i[8])
+            bastidor = (i[9])
+
+        MiConexion.commit()
+
+        #--------------FERNET------------------------------- 
+        bmarca = bytes.fromhex(marca)
+        bmodelo = bytes.fromhex(modelo)
+        baño = bytes.fromhex(año)
+        bfuel = bytes.fromhex(fuel)
+        bmatricula = bytes.fromhex(matricula)
+        bbastidor = bytes.fromhex(bastidor)
+
+        f = Fernet(keyFernet)
+
+        aMarca = f.decrypt(bmarca).decode()
+        aModelo = f.decrypt(bmodelo).decode()
+        aAño = f.decrypt(baño).decode()
+        aFuel = f.decrypt(bfuel).decode()
+        aMatricula = f.decrypt(bmatricula).decode()
+        aBastidor = f.decrypt(bbastidor).decode()
+
+        #------------------------------------------------
+
+        VarMarca.set(aMarca)
+        VarModelo.set(aModelo)
+        VarAño.set(aAño)
+        VarFuel.set(aFuel) 
+        VarMatricula.set(aMatricula)
+        VarBastidor.set(aBastidor)
+
+        """ROTACIÓN DE CLAVES"""
+
+        #TOKEN Y SALT 1
+
+        salt = os.urandom(16)
+        hexsalt1 = salt.hex()
+
+        kdf = Scrypt(
+
+            salt=salt,
+            length=32,
+            n=2**14,
+            r=8,
+            p=1,
+        )
+
+        bytekey=VarPass.get().encode()
+        key = kdf.derive(bytekey)
+        hexkey=key.hex()
+
+        MiCursor.execute("UPDATE DATOSUSUARIO SET CONTRASEÑA= '" + hexkey +
+                                        "', SALT= '" + hexsalt1 +
+                                        "' WHERE NOMBRE= '" + VarNombre.get() + "'")
+        
+        MiConexion.commit()
+
+        #-------------------------------------------------------------------------------------
+
+        #SALT 2
+
+        salt2 = os.urandom(16)
+        hexsalt2 = salt2.hex()
+
+        # derive
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt2,
+            iterations=390000,
+        )
+        bytekey2=VarPass.get().encode()
+        
+        keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
+        #---------------------------------------------
+
+        f = Fernet(keyFernet)
+
+        marca = VarMarca.get().encode()
+        modelo = VarModelo.get().encode()
+        año = VarAño.get().encode() 
+        fuel = VarFuel.get().encode()
+        matricula = VarMatricula.get().encode()
+        bastidor = VarBastidor.get().encode()
+
+        tokenMarca = f.encrypt(marca).hex()
+        tokenModelo = f.encrypt(modelo).hex()
+        tokenAño = f.encrypt(año).hex()
+        tokenFuel = f.encrypt(fuel).hex()
+        tokenMatricula = f.encrypt(matricula).hex()
+        tokenBastidor = f.encrypt(bastidor).hex()
+
+        MiCursor.execute("UPDATE DATOSUSUARIO SET SALT2= '" + hexsalt2 +
+                                        "', MARCA= '" + tokenMarca +        
+                                        "', MODELO= '" + tokenModelo +
+                                        "', AÑO= '" + tokenAño +
+                                        "', COMBUSTIBLE= '" + tokenFuel +
+                                        "', MATRICULA= '" + tokenMatricula + 
+                                        "', BASTIDOR= '" + tokenBastidor +
+                                        "' WHERE NOMBRE= '" + VarNombre.get() + "'")
+        MiConexion.commit()
+
+
+    except:
+       messagebox.showwarning("BBDD", "Error al introducir la contraseña")     
     
 def Actualizar():
     """Actualizamos el registro con ese usuario y contraseña"""
@@ -207,6 +278,7 @@ def Actualizar():
     
     for i in Usuario:
 
+        hexkey =(i[1])
         hexsalt1=(i[2])
         hexsalt2=(i[3])
 
@@ -215,6 +287,7 @@ def Actualizar():
     
     # ----SCRIPT---------------------------------
     salt1=bytes.fromhex(hexsalt1)
+    key=bytes.fromhex(hexkey)
 
     kdf = Scrypt(
     salt=salt1,
@@ -223,36 +296,24 @@ def Actualizar():
     r=8,
     p=1,
     )
-    bytekey=VarPass.get().encode()
-    key = kdf.derive(bytekey)
-    strkey=key.hex()
 
-    #---------PBKDF2HMC---------------------------------
-    salt2=bytes.fromhex(hexsalt2)
-    
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt2,
-        iterations=390000,
-    )
-    bytekey2=VarPass.get().encode()
-    
-    keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
+    bytekey=VarPass.get().encode() #Extraemos la contraseña de la interfaz gráficay la codificamos en bytes
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
-                                            + "' AND CONTRASEÑA= '" + strkey +"'")
+    try:
+        kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original    
 
-    Usuario=MiCursor.fetchall()
-
-    for i in Usuario:
+        #---------PBKDF2HMC---------------------------------
+        salt2=bytes.fromhex(hexsalt2)
         
-        VerUsuario = (i[0])
-        VerPass = (i[1])
-
-    MiConexion.commit()
-
-    if VerUsuario == VarNombre.get() and VerPass == strkey:
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt2,
+            iterations=390000,
+        )
+        bytekey2=VarPass.get().encode()
+        
+        keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
 
         f = Fernet(keyFernet)
 
@@ -280,7 +341,83 @@ def Actualizar():
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
         MiConexion.commit()
 
-        messagebox.showinfo("BBDD", "Registro actualizado conéxito")
+
+
+        """ROTACIÓN DE CLAVES"""
+
+        #SALT 1 Y TOKEN DE CONTRASEÑA
+
+        salt = os.urandom(16)
+        hexsalt1 = salt.hex()
+
+        kdf = Scrypt(
+
+            salt=salt,
+            length=32,
+            n=2**14,
+            r=8,
+            p=1,
+        )
+
+        bytekey=VarPass.get().encode()
+        key = kdf.derive(bytekey)
+        hexkey=key.hex()
+
+        MiCursor.execute("UPDATE DATOSUSUARIO SET CONTRASEÑA= '" + hexkey +
+                                        "', SALT= '" + hexsalt1 +
+                                        "' WHERE NOMBRE= '" + VarNombre.get() + "'")
+        
+        MiConexion.commit()
+
+        #---------------------------------------------------------------------------------------------
+
+        #SALT 2
+
+        salt2 = os.urandom(16)
+        hexsalt2 = salt2.hex()
+
+        # derive
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt2,
+            iterations=390000,
+        )
+        bytekey2=VarPass.get().encode()
+        
+        keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
+        #---------------------------------------------
+
+        f = Fernet(keyFernet)
+
+        marca = VarMarca.get().encode()
+        modelo = VarModelo.get().encode()
+        año = VarAño.get().encode() 
+        fuel = VarFuel.get().encode()
+        matricula = VarMatricula.get().encode()
+        bastidor = VarBastidor.get().encode()
+
+        tokenMarca = f.encrypt(marca).hex()
+        tokenModelo = f.encrypt(modelo).hex()
+        tokenAño = f.encrypt(año).hex()
+        tokenFuel = f.encrypt(fuel).hex()
+        tokenMatricula = f.encrypt(matricula).hex()
+        tokenBastidor = f.encrypt(bastidor).hex()
+
+        MiCursor.execute("UPDATE DATOSUSUARIO SET SALT2= '" + hexsalt2 +
+                                        "', MARCA= '" + tokenMarca +        
+                                        "', MODELO= '" + tokenModelo +
+                                        "', AÑO= '" + tokenAño +
+                                        "', COMBUSTIBLE= '" + tokenFuel +
+                                        "', MATRICULA= '" + tokenMatricula + 
+                                        "', BASTIDOR= '" + tokenBastidor +
+                                        "' WHERE NOMBRE= '" + VarNombre.get() + "'")
+        MiConexion.commit()
+
+
+        messagebox.showinfo("BBDD", "Registro actualizado conéxito")    
+    except:
+        messagebox.showwarning("BBDD", "Error al introducir la contraseña")
 
 def Eliminar():
     """Eliminamos el registro con ese usuario y esa contraseña"""
@@ -296,13 +433,14 @@ def Eliminar():
     
     for i in Usuario:
 
-        hexsalt=(i[2])
+        hexkey =(i[1])        
+        hexsalt =(i[2])
 
     MiConexion.commit()
-    
-    #key=bytes.fromhex(hexkey)    
+       
     salt=bytes.fromhex(hexsalt)
-
+    key=bytes.fromhex(hexkey)
+    
     kdf = Scrypt(
     salt=salt,
     length=32,
@@ -310,27 +448,15 @@ def Eliminar():
     r=8,
     p=1,
     )
-    #kdf.verify(b'VarPass.get()', key)
-    bytekey=VarPass.get().encode()
-    key = kdf.derive(bytekey)
-    strkey=key.hex()
 
-    MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() 
-                                            + "' AND CONTRASEÑA= '" + strkey +"'")
+    bytekey=VarPass.get().encode() #Extraemos la contraseña de la interfaz gráficay la codificamos en bytes
 
-    Usuario=MiCursor.fetchall()
+    try:
+        kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original
 
-    for i in Usuario:
-        
-        VerUsuario = (i[0])
-        VerPass = (i[1])
 
-    MiConexion.commit()
+        MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
-    if VerUsuario == VarNombre.get() and VerPass == strkey:
-
-        MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get()
-                                                + "' AND CONTRASEÑA= '" + strkey +"'")
         MiConexion.commit()
         messagebox.showinfo("BBDD", "Registro borrado con éxito")
 
@@ -341,8 +467,10 @@ def Eliminar():
         VarFuel.set("") 
         VarMatricula.set("")
         VarBastidor.set("")
-    
-    
+
+    except:
+        messagebox.showwarning("BBDD", "Error al introducir la contraseña")
+     
 def Limpiar():
     """Limpia los datos de la interfaz"""
     VarNombre.set("")
@@ -354,13 +482,17 @@ def Limpiar():
     VarMatricula.set("")
     VarBastidor.set("")
 
-def Salir():
-    """Salimos de la interfaz"""
+def Certificado():
 
-    Confirmacion=messagebox.askquestion("Salir", "Confirme para salir de la aplicación")
+    Leer() #Llamamos a la función leer para extraer los datos del usuario
 
-    if Confirmacion=="yes":
-        root.destroy()
+    """Creamos un txt con los datos del usuario y vehículo"""
+    
+    txt=open("'/VarNombre.get() + '.txt'", "w") #Creamos un txt con el nombre del usuario
+    txt.write("Marca: " + VarMarca.get() + "")
+    txt.write("Modelo: " + VarModelo.get() + "")
+    txt.write("Año: " + VarAño.get() + "")
+
 
 #--------------------VENTANA-------------------#
 
@@ -449,7 +581,7 @@ BotonEliminar.grid(row=0, column=3, padx=10, pady=10)
 BotonLimpiar=Button(Ventana2, text="Limpiar", command=Limpiar)
 BotonLimpiar.grid(row=1, column=1, padx=10, pady=10)
 
-BotonSalir=Button(Ventana2, text="Salir", command=Salir)
+BotonSalir=Button(Ventana2, text="Certificado", command=Certificado)
 BotonSalir.grid(row=1, column=2, padx=10, pady=10)
 
 root.mainloop()
