@@ -30,8 +30,8 @@ root=Tk()
 def Crear():
     """Creamos registros"""
 
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
@@ -104,8 +104,8 @@ def Crear():
 def Leer():
     """Lee los registros con un usuario y una contraseña"""
 
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
@@ -267,8 +267,8 @@ def Leer():
 def Actualizar():
     """Actualizamos el registro con ese usuario y contraseña"""
 
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
@@ -422,8 +422,8 @@ def Actualizar():
 def Eliminar():
     """Eliminamos el registro con ese usuario y esa contraseña"""
     
-    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
@@ -488,10 +488,13 @@ def Certificado():
 
     """Creamos un txt con los datos del usuario y vehículo"""
     
-    txt=open("'/VarNombre.get() + '.txt'", "w") #Creamos un txt con el nombre del usuario
-    txt.write("Marca: " + VarMarca.get() + "")
-    txt.write("Modelo: " + VarModelo.get() + "")
-    txt.write("Año: " + VarAño.get() + "")
+    txt=open(VarNombre.get() + '.txt', "w") #Creamos un txt con el nombre del usuario
+    txt.write("Marca: " + VarMarca.get() + os.linesep)
+    txt.write("Modelo: " + VarModelo.get() + os.linesep)
+    txt.write("Año: " + VarAño.get() + os.linesep)
+    txt.write("Combustible: " + VarFuel.get() + os.linesep)
+    txt.write("Matrícula: " + VarMatricula.get() + os.linesep)
+    txt.write("Bastidor: " + VarBastidor.get() + os.linesep)
 
 
 #--------------------VENTANA-------------------#
