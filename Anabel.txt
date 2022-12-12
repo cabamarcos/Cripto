@@ -1,6 +1,0 @@
-Marca: Ferrari
-Modelo: SF 90
-Año: 2020
-Combustible: Energía Nuclear
-Matrícula: 3456 RSA
-Bastidor: 2508247042758028

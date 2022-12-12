@@ -1,3 +1,0 @@
-Marca: BMW
-Modelo: E30
-Año: 1985
