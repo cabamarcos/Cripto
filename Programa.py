@@ -3,13 +3,20 @@ from tkinter import messagebox
 import sqlite3
 import os
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt #https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#cryptography.hazmat.primitives.kdf.scrypt.Scrypt
-from cryptography.hazmat.primitives import hashes            
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC #https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#cryptography.hazmat.primitives.kdf.pbkdf2.PBKDF2HMAC
 from cryptography.fernet import Fernet #https://cryptography.io/en/latest/fernet/#
 import base64
-
-
-#-------------------Crear Base de Datos"----------------------#
+from cryptography.hazmat.primitives.asymmetric import rsa #https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/#generation
+import json
+from cryptography.hazmat.primitives import serialization #https://cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/#cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey
+from cryptography.hazmat.primitives.asymmetric import padding #https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/#key-loading
+import shutil #https://www.delftstack.com/es/howto/python/how-to-delete-files-and-directories-in-python/
+from cryptography.hazmat.primitives.serialization import load_pem_public_key #https://cryptography.io/en/latest/hazmat/primitives/asymmetric/serialization/#cryptography.hazmat.primitives.serialization.load_pem_public_key
+from cryptography import x509 #https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
+from cryptography.x509.oid import NameOID #https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
+import datetime
+#-------------------Crear Base de Datos----------------------#
 
 # MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
 # #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
@@ -28,97 +35,142 @@ root=Tk()
 #-----------------Funciones------------------#
 
 def Crear():
-    """Creamos registros"""
+    try:
+        """Creamos registros"""
 
-    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+        MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+        #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
-    MiCursor=MiConexion.cursor()
+        MiCursor=MiConexion.cursor()
 
-    #SALT 1 PARA TOKEN DE CONTRASEÑA
-    salt = os.urandom(16)
-    strsalt = salt.hex()
+        #SALT 1 PARA TOKEN DE CONTRASEÑA
+        salt = os.urandom(16)
+        strsalt = salt.hex()
 
-    kdf = Scrypt(
+        kdf = Scrypt(
 
-        salt=salt,
-        length=32,
-        n=2**14,
-        r=8,
-        p=1,
-    )
+            salt=salt,
+            length=32,
+            n=2**14,
+            r=8,
+            p=1,
+        )
 
-    bytekey=VarPass.get().encode()
-    key = kdf.derive(bytekey)
-    strkey=key.hex()
-    #-------------------------------
+        bytekey=VarPass.get().encode()
+        key = kdf.derive(bytekey)
+        strkey=key.hex()
+        #-------------------------------
 
-    #SALT 2 PARA CIFRADO SIMETRICO
+        #SALT 2 PARA CIFRADO SIMETRICO
 
-    salt2 = os.urandom(16)
-    strsalt2 = salt2.hex()
+        salt2 = os.urandom(16)
+        strsalt2 = salt2.hex()
 
-    # derive
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt2,
-        iterations=390000,
-    )
-    bytekey2=VarPass.get().encode()
-    #bytekey2=bytes(VarPass.get(), "ascii")
-    
-    keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
-    #---------------------------------------------
+        # derive
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt2,
+            iterations=390000,
+        )
+        bytekey2=VarPass.get().encode()
+        #bytekey2=bytes(VarPass.get(), "ascii")
 
-    f = Fernet(keyFernet)
+        keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
+        #---------------------------------------------
 
-    marca = VarMarca.get().encode()
-    modelo = VarModelo.get().encode()
-    año = VarAño.get().encode() 
-    fuel = VarFuel.get().encode()
-    matricula = VarMatricula.get().encode()
-    bastidor = VarBastidor.get().encode()
+        f = Fernet(keyFernet)
 
-    tokenMarca = f.encrypt(marca).hex()
-    tokenModelo = f.encrypt(modelo).hex()
-    tokenAño = f.encrypt(año).hex()
-    tokenFuel = f.encrypt(fuel).hex()
-    tokenMatricula = f.encrypt(matricula).hex()
-    tokenBastidor = f.encrypt(bastidor).hex()
+        marca = VarMarca.get().encode()
+        modelo = VarModelo.get().encode()
+        año = VarAño.get().encode()
+        fuel = VarFuel.get().encode()
+        matricula = VarMatricula.get().encode()
+        bastidor = VarBastidor.get().encode()
 
-    
-    MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get() 
-                                                    + "','" + strkey
-                                                    + "','" + strsalt
-                                                    + "','" + strsalt2
-                                                    + "','" + tokenMarca
-                                                    + "','" + tokenModelo
-                                                    + "','" + tokenAño
-                                                    + "','" + tokenFuel 
-                                                    + "','" + tokenMatricula 
-                                                    + "','" + tokenBastidor + "')")
-    MiConexion.commit()
-    messagebox.showinfo("BBDD", "Registro insertado con éxito")
+        tokenMarca = f.encrypt(marca).hex()
+        tokenModelo = f.encrypt(modelo).hex()
+        tokenAño = f.encrypt(año).hex()
+        tokenFuel = f.encrypt(fuel).hex()
+        tokenMatricula = f.encrypt(matricula).hex()
+        tokenBastidor = f.encrypt(bastidor).hex()
 
+
+        MiCursor.execute("INSERT INTO DATOSUSUARIO VALUES('" + VarNombre.get()
+                                                        + "','" + strkey
+                                                        + "','" + strsalt
+                                                        + "','" + strsalt2
+                                                        + "','" + tokenMarca
+                                                        + "','" + tokenModelo
+                                                        + "','" + tokenAño
+                                                        + "','" + tokenFuel
+                                                        + "','" + tokenMatricula
+                                                        + "','" + tokenBastidor + "')")
+        MiConexion.commit()
+        messagebox.showinfo("BBDD", "Registro insertado con éxito")
+
+
+        '''Creamos carpeta para la firma digital'''
+
+        os.mkdir("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get()) #Creamos un directorio para guardar los txt
+        
+        #os.mkdir(VarNombre.get()) #Creamos un directorio para guardar los txt #MARCOS
+
+        #Hacer clave privada con contraseña RSA
+
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+        )
+        privatepem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.BestAvailableEncryption(bytekey)
+        )
+
+        #print(privatepem) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        #Crear archivo json con la clave privada
+        
+        with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\clave_privada.json", "w") as f: #DAMIÁN
+            json.dump(privatepem.hex(), f)
+
+        #Hacer clave publica desde clave privada RSA
+
+        public_key = private_key.public_key()
+        publicpem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+
+        #print(publicpem) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        #Crear archivo json con la clave publica
+
+        with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\clave_publica.json", "w") as f: #DAMIÁN
+            json.dump(publicpem.hex(), f)
+
+    except:
+        messagebox.showerror("Error", "El nombre de usuario ya existente")
+        
 def Leer():
     """Lee los registros con un usuario y una contraseña"""
 
-    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
     Usuario=MiCursor.fetchall()
-    
+
     for i in Usuario:
 
         hexkey =(i[1])
         hexsalt1 =(i[2])
         hexsalt2 =(i[3])
-    
+
     # ----SCRIPT---------------------------------
     salt1=bytes.fromhex(hexsalt1)
     key=bytes.fromhex(hexkey)
@@ -134,10 +186,10 @@ def Leer():
 
     try:
         kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original
-    
+
         #---------PBKDF2HMC---------------------------------
         salt2=bytes.fromhex(hexsalt2)
-        
+
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -145,25 +197,25 @@ def Leer():
             iterations=390000,
         )
         bytekey2=VarPass.get().encode()
-        
+
         keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
 
 
-        MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")                                                
+        MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
-        Usuario=MiCursor.fetchall()   
+        Usuario=MiCursor.fetchall()
         for i in Usuario:
-            
+
             marca = (i[4])
             modelo = (i[5])
             año = (i[6])
-            fuel = (i[7]) 
+            fuel = (i[7])
             matricula = (i[8])
             bastidor = (i[9])
 
         MiConexion.commit()
 
-        #--------------FERNET------------------------------- 
+        #--------------FERNET-------------------------------
         bmarca = bytes.fromhex(marca)
         bmodelo = bytes.fromhex(modelo)
         baño = bytes.fromhex(año)
@@ -185,7 +237,7 @@ def Leer():
         VarMarca.set(aMarca)
         VarModelo.set(aModelo)
         VarAño.set(aAño)
-        VarFuel.set(aFuel) 
+        VarFuel.set(aFuel)
         VarMatricula.set(aMatricula)
         VarBastidor.set(aBastidor)
 
@@ -212,7 +264,7 @@ def Leer():
         MiCursor.execute("UPDATE DATOSUSUARIO SET CONTRASEÑA= '" + hexkey +
                                         "', SALT= '" + hexsalt1 +
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
-        
+
         MiConexion.commit()
 
         #-------------------------------------------------------------------------------------
@@ -230,7 +282,7 @@ def Leer():
             iterations=390000,
         )
         bytekey2=VarPass.get().encode()
-        
+
         keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
         #---------------------------------------------
 
@@ -238,7 +290,7 @@ def Leer():
 
         marca = VarMarca.get().encode()
         modelo = VarModelo.get().encode()
-        año = VarAño.get().encode() 
+        año = VarAño.get().encode()
         fuel = VarFuel.get().encode()
         matricula = VarMatricula.get().encode()
         bastidor = VarBastidor.get().encode()
@@ -251,31 +303,31 @@ def Leer():
         tokenBastidor = f.encrypt(bastidor).hex()
 
         MiCursor.execute("UPDATE DATOSUSUARIO SET SALT2= '" + hexsalt2 +
-                                        "', MARCA= '" + tokenMarca +        
+                                        "', MARCA= '" + tokenMarca +
                                         "', MODELO= '" + tokenModelo +
                                         "', AÑO= '" + tokenAño +
                                         "', COMBUSTIBLE= '" + tokenFuel +
-                                        "', MATRICULA= '" + tokenMatricula + 
+                                        "', MATRICULA= '" + tokenMatricula +
                                         "', BASTIDOR= '" + tokenBastidor +
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
         MiConexion.commit()
 
 
     except:
-       messagebox.showwarning("BBDD", "Error al introducir la contraseña")     
-    
+       messagebox.showwarning("BBDD", "Error al introducir la contraseña")
+
 def Actualizar():
     """Actualizamos el registro con ese usuario y contraseña"""
 
-    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
     Usuario=MiCursor.fetchall()
-    
+
     for i in Usuario:
 
         hexkey =(i[1])
@@ -284,7 +336,7 @@ def Actualizar():
 
 
     MiConexion.commit()
-    
+
     # ----SCRIPT---------------------------------
     salt1=bytes.fromhex(hexsalt1)
     key=bytes.fromhex(hexkey)
@@ -300,11 +352,11 @@ def Actualizar():
     bytekey=VarPass.get().encode() #Extraemos la contraseña de la interfaz gráficay la codificamos en bytes
 
     try:
-        kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original    
+        kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original
 
         #---------PBKDF2HMC---------------------------------
         salt2=bytes.fromhex(hexsalt2)
-        
+
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -312,14 +364,14 @@ def Actualizar():
             iterations=390000,
         )
         bytekey2=VarPass.get().encode()
-        
+
         keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
 
         f = Fernet(keyFernet)
 
         marca = VarMarca.get().encode()
         modelo = VarModelo.get().encode()
-        año = VarAño.get().encode() 
+        año = VarAño.get().encode()
         fuel = VarFuel.get().encode()
         matricula = VarMatricula.get().encode()
         bastidor = VarBastidor.get().encode()
@@ -336,7 +388,7 @@ def Actualizar():
                                         "', MODELO= '" + tokenModelo +
                                         "', AÑO= '" + tokenAño +
                                         "', COMBUSTIBLE= '" + tokenFuel +
-                                        "', MATRICULA= '" + tokenMatricula + 
+                                        "', MATRICULA= '" + tokenMatricula +
                                         "', BASTIDOR= '" + tokenBastidor +
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
         MiConexion.commit()
@@ -366,7 +418,7 @@ def Actualizar():
         MiCursor.execute("UPDATE DATOSUSUARIO SET CONTRASEÑA= '" + hexkey +
                                         "', SALT= '" + hexsalt1 +
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
-        
+
         MiConexion.commit()
 
         #---------------------------------------------------------------------------------------------
@@ -384,7 +436,7 @@ def Actualizar():
             iterations=390000,
         )
         bytekey2=VarPass.get().encode()
-        
+
         keyFernet = base64.urlsafe_b64encode(kdf.derive(bytekey2))
         #---------------------------------------------
 
@@ -392,7 +444,7 @@ def Actualizar():
 
         marca = VarMarca.get().encode()
         modelo = VarModelo.get().encode()
-        año = VarAño.get().encode() 
+        año = VarAño.get().encode()
         fuel = VarFuel.get().encode()
         matricula = VarMatricula.get().encode()
         bastidor = VarBastidor.get().encode()
@@ -405,42 +457,42 @@ def Actualizar():
         tokenBastidor = f.encrypt(bastidor).hex()
 
         MiCursor.execute("UPDATE DATOSUSUARIO SET SALT2= '" + hexsalt2 +
-                                        "', MARCA= '" + tokenMarca +        
+                                        "', MARCA= '" + tokenMarca +
                                         "', MODELO= '" + tokenModelo +
                                         "', AÑO= '" + tokenAño +
                                         "', COMBUSTIBLE= '" + tokenFuel +
-                                        "', MATRICULA= '" + tokenMatricula + 
+                                        "', MATRICULA= '" + tokenMatricula +
                                         "', BASTIDOR= '" + tokenBastidor +
                                         "' WHERE NOMBRE= '" + VarNombre.get() + "'")
         MiConexion.commit()
 
 
-        messagebox.showinfo("BBDD", "Registro actualizado conéxito")    
+        messagebox.showinfo("BBDD", "Registro actualizado conéxito")
     except:
         messagebox.showwarning("BBDD", "Error al introducir la contraseña")
 
 def Eliminar():
     """Eliminamos el registro con ese usuario y esa contraseña"""
-    
-    #MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
-    MiConexion=sqlite3.connect("Base de Datos") # MARCOS
+
+    MiConexion=sqlite3.connect(r"C:\Users\Damián\Desktop\Damián\AAINFORMÁTICA\AA-CURSOS\3º\1º Cuatri\Criptografía y Seguridad Informática\Proyecto\Cripto2\Cripto\Base de Datos") # DAMIÁN
+    #MiConexion=sqlite3.connect("Base de Datos") # MARCOS
 
     MiCursor=MiConexion.cursor()
 
     MiCursor.execute("SELECT * FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
     Usuario=MiCursor.fetchall()
-    
+
     for i in Usuario:
 
-        hexkey =(i[1])        
+        hexkey =(i[1])
         hexsalt =(i[2])
 
     MiConexion.commit()
-       
+
     salt=bytes.fromhex(hexsalt)
     key=bytes.fromhex(hexkey)
-    
+
     kdf = Scrypt(
     salt=salt,
     length=32,
@@ -454,7 +506,10 @@ def Eliminar():
     try:
         kdf.verify(bytekey, key) #bytekey es la contraseña que introduce el usuario en el panel y key es la contraseña original
 
+        #BORRAMOS EL DIRECTORIO DEL USUARIO
+        shutil.rmtree("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get())
 
+        #BORRAMOS EL REGISTRO DE LA BBDD
         MiCursor.execute("DELETE FROM DATOSUSUARIO WHERE NOMBRE= '" + VarNombre.get() +"'")
 
         MiConexion.commit()
@@ -464,13 +519,13 @@ def Eliminar():
         VarMarca.set("")
         VarModelo.set("")
         VarAño.set("")
-        VarFuel.set("") 
+        VarFuel.set("")
         VarMatricula.set("")
         VarBastidor.set("")
 
     except:
         messagebox.showwarning("BBDD", "Error al introducir la contraseña")
-     
+
 def Limpiar():
     """Limpia los datos de la interfaz"""
     VarNombre.set("")
@@ -478,7 +533,7 @@ def Limpiar():
     VarMarca.set("")
     VarModelo.set("")
     VarAño.set("")
-    VarFuel.set("") 
+    VarFuel.set("")
     VarMatricula.set("")
     VarBastidor.set("")
 
@@ -487,15 +542,149 @@ def Certificado():
     Leer() #Llamamos a la función leer para extraer los datos del usuario
 
     """Creamos un txt con los datos del usuario y vehículo"""
-    
-    txt=open(VarNombre.get() + '.txt', "w") #Creamos un txt con el nombre del usuario
-    txt.write("Marca: " + VarMarca.get() + os.linesep)
-    txt.write("Modelo: " + VarModelo.get() + os.linesep)
-    txt.write("Año: " + VarAño.get() + os.linesep)
-    txt.write("Combustible: " + VarFuel.get() + os.linesep)
-    txt.write("Matrícula: " + VarMatricula.get() + os.linesep)
-    txt.write("Bastidor: " + VarBastidor.get() + os.linesep)
 
+    txt=open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\" + VarNombre.get() + ".txt", "w") #Creamos un txt con el nombre del usuario
+
+    txt.write("Nombre: " + VarNombre.get() + "\n" +
+                "Marca: " + VarMarca.get() + "\n" +
+                "Modelo: " + VarModelo.get() + "\n" +
+                "Año: " + VarAño.get() + "\n" +
+                "Combustible: " + VarFuel.get() + "\n" +
+                "Matrícula: " + VarMatricula.get() + "\n" +
+                "Bastidor: " + VarBastidor.get() + "\n")
+
+    txt.close() #Cerramos el txt
+
+    """Firmamos el txt con la clave privada del usuario"""
+
+    #Serializar txt
+
+    txt=open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\" + VarNombre.get() + ".txt", "r")
+
+    message=txt.read().encode()
+
+    txt.close()
+
+    #Cargamos la clave privada del usuario
+
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\clave_privada.json", "r") as f:
+        privatepemhex=json.load(f)
+
+    #Pasamos la clave privada a bytes
+    privatepem=bytes.fromhex(privatepemhex)
+
+    #Deserializamos la clave privada
+    private_key = serialization.load_pem_private_key(
+        privatepem,
+        password=VarPass.get().encode(),
+    )
+
+    #Firmamos el txt
+    signature = private_key.sign(
+        message,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    #Guardamos la firma en un json
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\firma.json", "w") as f:
+        json.dump(signature.hex(), f)
+
+    """Verificamos la firma"""
+
+    #Cargamos la clave pública del usuario
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\clave_publica.json", "r") as f:
+        publicpemhex=json.load(f)    
+    
+    #Pasamos la clave publica a bytes
+    publicpem=bytes.fromhex(publicpemhex)
+
+    #Deserializamos la clave publica
+    public_key = load_pem_public_key(publicpem)
+
+    try:
+        #Verificamos la firma
+        public_key.verify(
+            signature,
+            message,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        messagebox.showinfo("Firma", "La firma es válida")        
+    except:
+        messagebox.showwarning("Firma", "La firma no es válida")
+    
+
+    """Creacion del certificado Autofirmado"""
+
+    subject = issuer = x509.Name([
+        x509.NameAttribute(NameOID.COUNTRY_NAME, u"ES"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"Madrid"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, u"Leganés"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"UC3M"),
+        x509.NameAttribute(NameOID.COMMON_NAME, u"uc3m.es"),
+    ])
+    cert = x509.CertificateBuilder().subject_name(
+        subject
+    ).issuer_name(
+        issuer
+    ).public_key(
+        private_key.public_key()
+    ).serial_number(
+        x509.random_serial_number()
+    ).not_valid_before(
+        datetime.datetime.utcnow()
+    ).not_valid_after(
+        # Our certificate will be valid for 10 days
+        datetime.datetime.utcnow() + datetime.timedelta(days=10)
+    ).add_extension(
+        x509.SubjectAlternativeName([x509.DNSName(u"localhost")]),
+        critical=False,
+    # Sign our certificate with our private key
+    ).sign(private_key, hashes.SHA256())
+
+    certpem=cert.public_bytes(serialization.Encoding.PEM)
+    #Guardamos el certificado en un json
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\certificado.json", "w") as f:
+        json.dump(certpem.hex(), f)
+    
+
+    """Verificacion del certificado"""
+
+    #Cargamos el certificado
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\certificado.json", "r") as f:
+        certpemhex=json.load(f)
+    #Pasamos el certificado a bytes
+    certpem=bytes.fromhex(certpemhex)
+    #Deserializamos el certificado
+    cert = x509.load_pem_x509_certificate(certpem) 
+    #Obtenemos la clave publica del certificado
+    public_key=cert.public_key() 
+    #Serializamos la clave publica
+    publicpem=public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    #Funcion para verificar el certificado:
+    try:
+        issuer_public_key = load_pem_public_key(publicpem) #Como el CA(issuer) es el mismo que el usuario(subject) usamos la misma clave publica
+
+        issuer_public_key.verify(
+            cert.signature,
+            cert.tbs_certificate_bytes,
+            # Depends on the algorithm used to create the certificate
+            padding.PKCS1v15(),
+            cert.signature_hash_algorithm,
+        )
+        messagebox.showinfo("Certificado", "El certificado es válido")
+    except:
+        messagebox.showwarning("Certificado", "El certificado no es válido")
+   
 
 #--------------------VENTANA-------------------#
 
