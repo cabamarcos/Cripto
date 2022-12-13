@@ -110,7 +110,7 @@ def Crear():
         messagebox.showinfo("BBDD", "Registro insertado con éxito")
 
 
-        '''Creamos carpeta para la firma digital'''
+        '''Creamos carpeta del usuario y guardamos la clave privada y publica'''
 
         os.mkdir("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get()) #Creamos un directorio para guardar los txt
         
@@ -592,36 +592,23 @@ def Certificado():
     with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\firma.json", "w") as f:
         json.dump(signature.hex(), f)
 
-    """Verificamos la firma"""
-
-    #Cargamos la clave pública del usuario
-    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\clave_publica.json", "r") as f:
-        publicpemhex=json.load(f)    
     
-    #Pasamos la clave publica a bytes
-    publicpem=bytes.fromhex(publicpemhex)
-
-    #Deserializamos la clave publica
-    public_key = load_pem_public_key(publicpem)
-
-    try:
-        #Verificamos la firma
-        public_key.verify(
-            signature,
-            message,
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
-        )
-        messagebox.showinfo("Firma", "La firma es válida")        
-    except:
-        messagebox.showwarning("Firma", "La firma no es válida")
-    
-
     """Creacion del certificado Autofirmado"""
 
+    #Cargamos la clave privada del usuario
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\clave_privada.json", "r") as f:
+        privatepemhex=json.load(f)
+
+    #Pasamos la clave privada a bytes
+    privatepem=bytes.fromhex(privatepemhex)
+
+    #Deserializamos la clave privada
+    private_key = serialization.load_pem_private_key(
+        privatepem,
+        password=VarPass.get().encode(),
+    )
+
+    #Creamos certificado autofirmado
     subject = issuer = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"ES"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"Madrid"),
@@ -684,7 +671,41 @@ def Certificado():
         messagebox.showinfo("Certificado", "El certificado es válido")
     except:
         messagebox.showwarning("Certificado", "El certificado no es válido")
-   
+
+
+    """Verificamos la firma"""
+
+    # #Deserializamos la clave publica extraida del certificado
+    public_key = load_pem_public_key(publicpem)
+
+    #Cargamos la firma
+    with open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\firma.json", "r") as f:
+        signaturehex=json.load(f)
+
+    #Pasamos la firma a bytes
+    signature=bytes.fromhex(signaturehex)
+
+    #Cargamos el mensaje
+    txt=open("C:\\Users\\Damián\\Desktop\\Damián\\AAINFORMÁTICA\\AA-CURSOS\\3º\\1º Cuatri\Criptografía y Seguridad Informática\\Proyecto\\Cripto2\\Cripto\\" + VarNombre.get() + "\\" + VarNombre.get() + ".txt", "r")
+
+    message=txt.read().encode()
+
+    txt.close()
+    
+    try:
+        #Verificamos la firma
+        public_key.verify(
+            signature,
+            message,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        messagebox.showinfo("Firma", "La firma es válida")        
+    except:
+        messagebox.showwarning("Firma", "La firma no es válida")
 
 #--------------------VENTANA-------------------#
 
