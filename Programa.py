@@ -707,6 +707,7 @@ def Certificado():
     except:
         messagebox.showwarning("Firma", "La firma no es válida")
 
+
 #--------------------VENTANA-------------------#
 
 Ventana=Frame(root)
