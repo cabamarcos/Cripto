@@ -1,6 +1,4 @@
 # Desarrollo de una aplicación que utilice criptografía
-## Requisitos
-
 ## Objetivo
 El objetivo de esta práctica es que los alumnos conozcan y aprendan a utilizar librerías
 criptográficas para así afianzar los conceptos criptográficos estudiados en teoría. Así, se
