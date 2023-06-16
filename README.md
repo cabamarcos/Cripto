@@ -39,26 +39,26 @@ que considerar las diferencias entre cifrado simétrico, asimétrico, firma digi
 • Simétrico: dado que la clave de cifrado es la misma que la de descifrado, ésta podría
 estar:
 
-o Almacenada en un fichero/base de datos. Dado que esta clave es secreta, podría
-ocurrir que se almacenase con algún tipo de protección (por ejemplo, cifrado
-con una contraseña introducida por el usuario)
+  o Almacenada en un fichero/base de datos. Dado que esta clave es secreta, podría
+  ocurrir que se almacenase con algún tipo de protección (por ejemplo, cifrado
+  con una contraseña introducida por el usuario)
 
-o Recordada por el usuario y utilizada en los momentos adecuados.
+  o Recordada por el usuario y utilizada en los momentos adecuados.
 
 • Asimétrico: la clave de cifrado y descifrado son distintas y lo más habitual es que, dada
 su longitud, no sean introducidas por los usuarios, sino que se creen y posteriormente,
 el usuario podría utilizarlas porque estén:
 
-o Almacenadas en un fichero/base de datos y se seleccione la pública o la privada,
-según corresponda. Es posible que el acceso a la clave privada esté protegido y
-que ésta sólo sea accesible a través de una contraseña.
+  o Almacenadas en un fichero/base de datos y se seleccione la pública o la privada,
+  según corresponda. Es posible que el acceso a la clave privada esté protegido y
+  que ésta sólo sea accesible a través de una contraseña.
 
 • Firma digital: dado que se utiliza cifrado asimétrico para realizar las firmas, las
 cuestiones a considerar son las anteriormente expuestas.
 
-o En el caso de realizar firmas se utilizarán claves asimétricas, que también
-podrían ser utilizadas para el cifrado asimétrico, pero se hará uso de una PKI
-como la posteriormente descrita para la creación de dichas claves.
+  o En el caso de realizar firmas se utilizarán claves asimétricas, que también
+  podrían ser utilizadas para el cifrado asimétrico, pero se hará uso de una PKI
+  como la posteriormente descrita para la creación de dichas claves.
 
 • HMAC: en la generación de HMAC se utiliza una única clave, de modo que las
 consideraciones son las establecidas para el cifrado simétrico.
